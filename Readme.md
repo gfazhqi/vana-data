@@ -26,7 +26,7 @@ This project automates task completion and auto-tapping for the Vana Data Hero g
    ```bash
    npm install
 
-How to Obtain the Query String
+# How to Obtain the Query String
  1.Open the Vana Data Hero web app and log in to your account.
  
  2.Open your browser's Developer Tools (right-click anywhere on the page and select "Inspect").
