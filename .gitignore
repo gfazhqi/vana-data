@@ -1,0 +1,23 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+
+# IDE-specific files
+.idea/
+.vscode/
+
+# Generated files
+dist/
+build/
+
+# Temporary files
+*.tmp
+*.swp
+*.bak
