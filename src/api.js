@@ -74,7 +74,7 @@ async function autoTap(initData) {
         miningCount++;
         totalPoints += points;
         displayStatus(successCount, failureCount);
-        console.log(`-> Successfully Start Mining for: ${points} points`.green);
+        console.log(`-> Successfully Tapping for: ${points} points`.green);
         
         if (basePoints < maxAllowedPoints - 10) {
             basePoints = Math.min(basePoints + adjustmentStep, maxAllowedPoints - 10);
