@@ -2,111 +2,121 @@ const axios = require('axios');
 const { headers } = require('./headers');
 const { displayStatus } = require('./display');
 
-let successCount = 0;
-let failureCount = 0;
-let miningCount = 0;
-let totalPoints = 0;
-let basePoints = 1500; 
-const maxAllowedPoints = 1800;
-const minBasePoints = 1400; 
-const adjustmentStep = 3; 
+class VanaAPI {
+    constructor(initData) {
+        this.initData = initData;
+        this.successCount = 0;
+        this.failureCount = 0;
+        this.miningCount = 0;
+        this.totalPoints = 0;
+        this.basePoints = 1500;
+        this.maxAllowedPoints = 1800;
+        this.minBasePoints = 1400;
+        this.adjustmentStep = 3;
+    }
 
-async function getPlayerData(initData) {
-    const url = 'https://www.vanadatahero.com/api/player';
-    try {
-        const response = await axios.get(url, { headers: headers(initData) });
-        console.log(`-> Successfully Get Player Info`);
-        totalPoints = response.data.points;
-        console.log(`Points: ${totalPoints}`);
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching player data:', error.message);
-        if (error.response && error.response.status === 400) {
-            console.log(error.response.data.message);
-        } else {
-            console.log(`-> Error Get Player Info : ${error.response.status}-${error.response.statusText}`);
+    async getPlayerData() {
+        const url = 'https://www.vanadatahero.com/api/player';
+        try {
+            const response = await axios.get(url, { headers: headers(this.initData) });
+            console.log(`[${this.initData}] -> Successfully Get Player Info`);
+            this.totalPoints = response.data.points;
+            console.log(`[${this.initData}] Points: ${this.totalPoints}`);
+            return response.data;
+        } catch (error) {
+            this.handleApiError('Error fetching player data', error);
+            return null;
         }
     }
-}
 
-async function completePendingTasks(initData) {
-    const url = 'https://www.vanadatahero.com/api/tasks';
-    try {
-        const response = await axios.get(url, { headers: headers(initData) });
-        const tasks = response.data.tasks.filter(task => task.id !== 1 && task.id !== 17 && task.id !== 5);
+    async completePendingTasks() {
+        const url = 'https://www.vanadatahero.com/api/tasks';
+        try {
+            const response = await axios.get(url, { headers: headers(this.initData) });
+            const tasks = response.data.tasks.filter(task => ![1, 17, 5].includes(task.id));
 
-        for (const task of tasks) {
-            if (task.completed.length === 0) {
-                console.log(`-> Try to Completing Task ${task.name}`);
-                const taskUrl = `https://www.vanadatahero.com/api/tasks/${task.id}`;
-                const payload = { status: 'completed', points: task.points };
+            for (const task of tasks) {
+                if (task.completed.length === 0) {
+                    console.log(`[${this.initData}] -> Try to Completing Task ${task.name}`);
+                    const taskUrl = `https://www.vanadatahero.com/api/tasks/${task.id}`;
+                    const payload = { status: 'completed', points: task.points };
 
-                try {
-                    await axios.post(taskUrl, payload, { headers: headers(initData) });
-                    successCount++;
-                    console.log(`-> Task ${task.name} Completed | Earned: ${task.points}`.green);
-                } catch (error) {
-                    failureCount++;
-                    if (error.response && error.response.status === 400) {
-                        console.log(error.response.data.message);
-                    } else {
-                        console.log(`-> Failed to Complete task ${task.name} : ${error.response.status}-${error.response.statusText}`.red);
+                    try {
+                        await axios.post(taskUrl, payload, { headers: headers(this.initData) });
+                        this.successCount++;
+                        console.log(`[${this.initData}] -> Task ${task.name} Completed | Earned: ${task.points}`.green);
+                    } catch (error) {
+                        this.handleApiError(`Failed to Complete task ${task.name}`, error);
                     }
                 }
             }
+        } catch (error) {
+            this.handleApiError('Error fetching tasks', error);
         }
-    } catch (error) {
-        console.error('Error fetching tasks: ', error.message);
     }
-}
 
-async function autoTap(initData) {
-    const taskId = 1;
-    const variation = Math.floor(Math.random() * 8); 
-    const points = Math.min(basePoints + variation, maxAllowedPoints);
+    async autoTap() {
+        const taskId = 1;
+        const variation = Math.floor(Math.random() * 8);
+        const points = Math.min(this.basePoints + variation, this.maxAllowedPoints);
 
-    const url = `https://www.vanadatahero.com/api/tasks/${taskId}`;
-    const payload = { status: 'completed', points: points };
+        const url = `https://www.vanadatahero.com/api/tasks/${taskId}`;
+        const payload = { status: 'completed', points: points };
 
-    try {
-        await axios.post(url, payload, { headers: headers(initData) });
-        successCount++;
-        miningCount++;
-        totalPoints += points;
-        displayStatus(successCount, failureCount);
-        console.log(`-> Successfully Tapping for: ${points} points`.green);
-        
-        if (basePoints < maxAllowedPoints - 10) {
-            basePoints = Math.min(basePoints + adjustmentStep, maxAllowedPoints - 10);
+        try {
+            await axios.post(url, payload, { headers: headers(this.initData) });
+            this.successCount++;
+            this.miningCount++;
+            this.totalPoints += points;
+            displayStatus(this.successCount, this.failureCount);
+            console.log(`[${this.initData}] -> Successfully Tapping for: ${points} points`.green);
+            
+            if (this.basePoints < this.maxAllowedPoints - 10) {
+                this.basePoints = Math.min(this.basePoints + this.adjustmentStep, this.maxAllowedPoints - 10);
+            }
+            
+            if (this.miningCount % 5 === 0) {
+                console.log(`[${this.initData}] Total Points after ${this.miningCount} tapping operations: ${this.totalPoints}`.cyan);
+                console.log(`[${this.initData}] Current base points: ${this.basePoints}`.yellow);
+            }
+            return true;
+        } catch (error) {
+            return this.handleTapError(error);
         }
-        
-        if (miningCount % 5 === 0) {
-            console.log(`Total Points after ${miningCount} tapping operations: ${totalPoints}`.cyan);
-            console.log(`Current base points: ${basePoints}`.yellow);
+    }
+
+    handleApiError(context, error) {
+        this.failureCount++;
+        if (error.response) {
+            console.error(`[${this.initData}] ${context}: ${error.response.status} - ${error.response.statusText}`);
+            console.log(`[${this.initData}] Full error response:`, error.response.data);
+        } else if (error.request) {
+            console.error(`[${this.initData}] ${context}: No response received from the server.`);
+        } else {
+            console.error(`[${this.initData}] ${context}: ${error.message}`);
         }
-    } catch (error) {
-        failureCount++;
-        displayStatus(successCount, failureCount);
+    }
+
+    handleTapError(error) {
+        this.failureCount++;
+        displayStatus(this.successCount, this.failureCount);
 
         if (error.response) {
             if (error.response.data.message === 'Points limit exceeded') {
-                console.error('Points limit exceeded, stopping auto-tap.');
+                console.error(`[${this.initData}] Points limit exceeded, stopping auto-tap.`);
                 return false;
             } else if (error.response.data.message === 'Incorrect points value') {
-                console.error('Incorrect points value, adjusting base points.'.red);
-                basePoints = Math.max(basePoints - adjustmentStep * 2, minBasePoints);
-                console.log(`Adjusted base points to: ${basePoints}`.yellow);
+                console.error(`[${this.initData}] Incorrect points value, adjusting base points.`.red);
+                this.basePoints = Math.max(this.basePoints - this.adjustmentStep * 2, this.minBasePoints);
+                console.log(`[${this.initData}] Adjusted base points to: ${this.basePoints}`.yellow);
             } else {
-                console.error(`Error during auto-tap: ${error.response.status} - ${error.response.statusText}`);
+                this.handleApiError('Error during auto-tap', error);
             }
-            console.log('Full error response:', error.response.data);
-        } else if (error.request) {
-            console.error('Error: No response received from the server.');
         } else {
-            console.error(`Error: ${error.message}`);
+            this.handleApiError('Error during auto-tap', error);
         }
+        return true;
     }
-    return true;
 }
 
-module.exports = { getPlayerData, completePendingTasks, autoTap };
+module.exports = VanaAPI;
