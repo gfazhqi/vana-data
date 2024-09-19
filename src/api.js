@@ -81,7 +81,7 @@ async function autoTap(initData) {
         }
         
         if (miningCount % 5 === 0) {
-            console.log(`Total Points after ${miningCount} mining operations: ${totalPoints}`.cyan);
+            console.log(`Total Points after ${miningCount} tapping operations: ${totalPoints}`.cyan);
             console.log(`Current base points: ${basePoints}`.yellow);
         }
     } catch (error) {
