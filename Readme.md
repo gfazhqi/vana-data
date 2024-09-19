@@ -16,11 +16,11 @@ This project automates task completion and auto-tapping for the Vana Data Hero g
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/ada682/vana-auto-tap.git
+   git clone https://github.com/ada682/vana-data.git
 
 2. Navigate to the project directory:
    ```bash
-   cd vana-auto-tap
+   cd vana-data
 
 3. Install dependencies:
    ```bash
