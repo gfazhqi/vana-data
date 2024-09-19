@@ -28,10 +28,15 @@ This project automates task completion and auto-tapping for the Vana Data Hero g
 
 How to Obtain the Query String
  1.Open the Vana Data Hero web app and log in to your account.
+ 
  2.Open your browser's Developer Tools (right-click anywhere on the page and select "Inspect").
+ 
  3.Go to the Application tab in Developer Tools.
+ 
  4.In the left-hand sidebar, navigate to Storage > Session Storage.
+ 
  5.Select the Vana Data Hero session and look for the query data under sessionStorage.
+ 
  6.Copy the query string. It should look something like this:
    ```bash
     query_id=AAGu72pYAAAAAK7valgj4vxX&user=%7B%22id%22%3A1483403182%2C%22first_name%22%3A...
